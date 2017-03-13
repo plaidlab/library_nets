@@ -104,7 +104,7 @@ class Environment(object):
         print('Validation after Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}\tAccuracy: {:.6f}'.format(
             self.epoch, batch_idx * len(data) * (n_batches - train_batches) / n_batches,
             len(self.train_loader.dataset) * (n_batches - train_batches) / n_batches,
-            100. * batch_idx / (n_batches - train_batches), loss.data[0]),
+            100. * batch_idx / (n_batches - train_batches), test_loss),
             correct / (len(self.train_loader.dataset) * (n_batches - train_batches) / n_batches))
 
         if self.epoch % self.args.test_epochs == 0:
