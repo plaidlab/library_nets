@@ -19,7 +19,7 @@ module_spec = [
 ("Conv40_20", 2),
 ("Conv20", 3),
 ("Conv20_10", 2),
-("BN", 5),
+("BN_40", 5),
 ("Skipper", 2),
 ("ReLU", 1)
 ]

@@ -9,6 +9,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
+cuda = torch.cuda.is_available()
 
 def shape_like(tensor1, tensor2):
     tensor1, tensor2 = pool_shape_like(tensor1, tensor2)
@@ -59,6 +60,8 @@ class ChannelShaper(object):
             sizes = [s for s in inputs.size()]
             sizes[1] = self.module_channels - sizes[1]
             zeros = Variable(torch.zeros(sizes[0], sizes[1], sizes[2], sizes[3]))
+            if cuda:
+                zeros = zeros.cuda()
             # print(sizes)
             # print(zeros.size())
             output = torch.cat((inputs, zeros), 1)
@@ -111,6 +114,10 @@ class BN(nn.Module):
         x = self.bn(x)
         x = self.shaper.unshape(x, restore_dims=True)
         return x
+
+class BN_40(BN):
+    def __init__(self):
+        super(BN_40, self).__init__(40)
 
 class Classifier(nn.Module):
     def __init__(self, num_classes):
