@@ -70,5 +70,7 @@ args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
 dynet = DynamicNetwork(module_spec, 1, 10)
+if args.cuda:
+    dynet.cuda()
 
 train_ac.train(args, dynet)
