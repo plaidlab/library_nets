@@ -66,6 +66,16 @@ parser.add_argument('--dataset', type=str, default='MNIST', metavar='DS',
                     help='Dataset to use')
 parser.add_argument('--valid_fraction', type=float, default=0.2, metavar='VF',
                     help='Fraction of train set to use for validation')
+parser.add_argument('--gamma', type=float, default=0.99, metavar='G',
+                    help='Discount factor')
+parser.add_argument('--tau', type=float, default=1.0, metavar='G',
+                    help='Parameter for GAE')
+parser.add_argument('--truncate_train_batches', type=int, default=20, metavar='NS',
+                    help='Max number of train batches per "epoch"')
+parser.add_argument('--truncate_valid_batches', type=int, default=10, metavar='NS',
+                    help='Max number of valid batches per "epoch"')
+parser.add_argument('--test_epochs', type=int, default=10, metavar='NS',
+                    help='Epochs per test set pass')
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 

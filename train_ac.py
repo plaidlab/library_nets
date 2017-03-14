@@ -66,7 +66,7 @@ def train(args, dynet):
             action = prob.multinomial().data
             log_prob = log_prob.gather(1, Variable(action))
 
-            state, reward, done, _ = env.step(action.numpy())
+            state, reward, done, _ = env.step(action.numpy()[0, 0])
             done = done or episode_length >= args.num_steps
             reward = max(min(reward, 1), -1)
 

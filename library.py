@@ -21,15 +21,15 @@ class DynamicNetwork(nn.Module):
     def set_structure(self, indices):
         self.indices = indices
         print("Setting structure.")
-        print("Indices: " + ", ".join([str(i[0, 0]) for i in indices]))
-        print("Module types: " + ", ".join([str(type(self.library[i[0,0]])) for i in indices]))
+        print("Indices: " + ", ".join([str(i) for i in indices]))
+        print("Module types: " + ", ".join([str(type(self.library[i])) for i in indices]))
 
     def forward(self, x):
         if self.indices is None:
             raise Exception("No network structure specified. Call set_structure")
         x = self.initial_conv(x)
         for i in self.indices:
-            x = self.library[i[0, 0]](x)
+            x = self.library[i](x)
         x = self.classifier(x)
         return x
 

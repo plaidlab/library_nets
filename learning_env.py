@@ -21,6 +21,10 @@ class Environment(object):
         self.embedding_size = libr.embedding_size
         self.zero_state = Variable(torch.zeros(1, args.lstm_size))
 
+        self.truncate_train_batches = args.truncate_train_batches
+
+        self.truncate_valid_batches = args.truncate_valid_batches
+
         self.epoch = 0
 
         self.args = args
@@ -43,7 +47,7 @@ class Environment(object):
 
         if (action < self.num_actions - 1) and (action >= 0):
             self.module_seq.append(action)
-            state = self.libr(action[0, 0])
+            state = self.libr(action)
             reward = 0
             done = False
             return state, reward, done, None
@@ -67,10 +71,14 @@ class Environment(object):
         valid_accuracies = []
         test_loss = 0
         correct = 0
+        valid_size = 0
 
         for batch_idx, (data, target) in enumerate(self.train_loader):
 
             if batch_idx <= train_batches:
+
+                if batch_idx > self.truncate_train_batches:
+                    continue
 
                 self.dynet.train()
                 data, target = Variable(data), Variable(target)
@@ -89,6 +97,8 @@ class Environment(object):
                         len(self.train_loader.dataset) * train_batches / n_batches,
                         100. * batch_idx / train_batches, loss.data[0]))
             else:
+                if batch_idx - train_batches > self.truncate_valid_batches:
+                    continue
                 self.dynet.eval()
                 data, target = Variable(data, volatile=True), Variable(target)
                 if self.args.cuda:
@@ -99,21 +109,23 @@ class Environment(object):
                 pred = output.data.max(1)[1] # get the index of the max log-probability
                 correct += pred.eq(target.data).cpu().sum()
 
-        accuracy = correct / (len(self.train_loader.dataset) * (n_batches - train_batches) / n_batches)
 
-        print('Validation after Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}\tAccuracy: {:.6f}'.format(
-            self.epoch, batch_idx * len(data) * (n_batches - train_batches) / n_batches,
-            len(self.train_loader.dataset) * (n_batches - train_batches) / n_batches,
-            100. * batch_idx / (n_batches - train_batches), test_loss),
-            correct / (len(self.train_loader.dataset) * (n_batches - train_batches) / n_batches))
+        len_valid = min(n_batches - train_batches, self.truncate_valid_batches)
 
-        if self.epoch % self.args.test_epochs == 0:
+        test_loss = test_loss / len_valid
+        accuracy = correct / (len_valid * self.args.batch_size)
+
+        print('\Validation set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+            test_loss, correct, len_valid,
+            100. * correct / len_valid))
+
+        if (self.epoch % self.args.test_epochs) == 0:
             self.test_model()
 
         return accuracy
 
     def test_model(self):
-        model.eval()
+        self.dynet.eval()
         test_loss = 0
         correct = 0
         for data, target in self.test_loader:
@@ -126,10 +138,10 @@ class Environment(object):
             correct += pred.eq(target.data).cpu().sum()
 
         test_loss = test_loss
-        test_loss /= len(test_loader) # loss function already averages over batch size
+        test_loss /= len(self.test_loader) # loss function already averages over batch size
         print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-            test_loss, correct, len(test_loader.dataset),
-            100. * correct / len(test_loader.dataset)))
+            test_loss, correct, len(self.test_loader.dataset),
+            100. * correct / len(self.test_loader.dataset)))
 
     def prep_data(self):
         # The output of torchvision datasets are PILImage images of range [0, 1].
